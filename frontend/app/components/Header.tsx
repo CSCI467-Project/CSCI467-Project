@@ -10,9 +10,16 @@ const Header = () => {
         <Link href="/cart" style={{ margin: '0 1rem' }}>
           Cart
         </Link>
+        <Link href="/checkout" style={{ margin: '0 1rem' }}>
+          Checkout
+        </Link>
+        <Link href="/admin-login" style={{ margin: '0 1rem' }}>
+          Admin Login
+        </Link>
       </nav>
     </header>
   );
 };
 
 export default Header;
+
