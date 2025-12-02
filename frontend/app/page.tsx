@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { useCart } from "./components/CartProvider";
 
 type Product = {
   name: string;
@@ -38,22 +39,7 @@ const PRODUCTS: Product[] = [
 ];
 
 export default function Home() {
-  const [cart, setCart] = useState<Record<string, number>>({});
-
-  function addToCart(name: string) {
-    setCart(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-  }
-
-  function removeFromCart(name: string) {
-    setCart(prev => {
-      const current = prev[name] || 0;
-      if (current <= 1) {
-        const { [name]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [name]: current - 1 };
-    });
-  }
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const totalItems = Object.values(cart).reduce((s, n) => s + n, 0);
   const totalPrice = PRODUCTS.reduce((sum, p) => sum + (cart[p.name] || 0) * p.price, 0);
