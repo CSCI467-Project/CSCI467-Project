@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../components/CartProvider';
@@ -8,6 +9,7 @@ import { PRODUCTS } from '../data/products';
 
 const CartPage = () => {
   const { cart, addToCart, removeFromCart } = useCart();
+  const router = useRouter();
 
   const items = PRODUCTS.filter(p => cart[p.name]);
   const totalItems = Object.values(cart).reduce((s, n) => s + n, 0);
@@ -48,6 +50,15 @@ const CartPage = () => {
               <strong>Items:</strong> {totalItems}
               <br />
               <strong>Total:</strong> ${totalPrice.toFixed(2)}
+              <div style={{ marginTop: '1rem' }}>
+                <button
+                  onClick={() => router.push('/checkout')}
+                  disabled={totalItems === 0}
+                  style={{ padding: '0.6rem 1rem', background: totalItems === 0 ? '#ccc' : '#2563eb', color: '#fff', borderRadius: 6, border: 'none', cursor: totalItems === 0 ? 'not-allowed' : 'pointer', marginTop: 8 }}
+                >
+                  Proceed to Checkout
+                </button>
+              </div>
             </div>
           </div>
         )}
