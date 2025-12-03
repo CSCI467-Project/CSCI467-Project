@@ -7,19 +7,21 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "seed": "tsx src/scripts/migrateLegacyData.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.0.1",
-    "@prisma/client": "^7.0.1",
+    "@prisma/adapter-pg": "6.16.0",
+    "@prisma/client": "6.16.0",
     "bcrypt": "^6.0.0",
     "colors": "^1.4.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "ioredis": "^5.8.2",
@@ -28,7 +30,7 @@
     "mysql2": "^3.15.3",
     "node-fetch": "^3.3.2",
     "pg": "^8.16.3",
-    "prisma": "^7.0.1",
+    "prisma": "6.16.0",
     "resend": "^6.5.2",
     "uuid": "^13.0.0",
     "winston": "^3.18.3",
