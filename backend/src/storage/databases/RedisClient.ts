@@ -98,18 +98,30 @@ const redisConfig = {
   lazyConnect: true,
   db: parseInt(env.REDIS_DB),
   connectTimeout: 15000,
+  retryStrategy: (times: number) => {
+    const delay = Math.min(times * 50, 2000);
+    logger.info(`Redis connection attempt ${times}, retrying in ${delay}ms`);
+    return delay;
+  },
+  maxRetriesPerRequest: 3,
   tls: ca && cert && key ? {
     rejectUnauthorized: true,
     ca: ca,
     cert: cert,
     key: key,
+    servername: env.REDIS_HOST, // Important for SNI
+    minVersion: 'TLSv1.2',
   } : undefined
 };
+
+logger.info(`Redis config: ${env.REDIS_HOST}:${env.REDIS_PORT} (TLS: ${redisConfig.tls ? 'enabled' : 'disabled'}, mTLS: ${cert && key ? 'yes' : 'no'})`);
 
 const redisClient = new Redis(redisConfig);
 
 redisClient.on('error', (err) => {
-  logger.error('Redis Client Error:', err);
+  logger.error('Redis Client Error:', err.message);
+  if (err.code) logger.error('Error Code:', err.code);
+  if (err.syscall) logger.error('System Call:', err.syscall);
 });
 
 redisClient.on('connect', () => {
@@ -120,13 +132,23 @@ redisClient.on('ready', () => {
   logger.info('Redis connection established and ready');
 });
 
+redisClient.on('close', () => {
+  logger.warn('Redis connection closed');
+});
+
+redisClient.on('reconnecting', (delay: number) => {
+  logger.info(`Redis reconnecting in ${delay}ms`);
+});
+
 async function initRedis(): Promise<void> {
   try {
     await redisClient.connect();
     logger.info('Redis initialized successfully');
   } catch (error) {
     logger.error('Failed to connect to Redis:', error);
-    process.exit(1);
+    logger.warn('⚠️  Continuing without Redis - session features will be unavailable');
+    // Don't exit - allow app to run without Redis
+    // process.exit(1);
   }
 }
 

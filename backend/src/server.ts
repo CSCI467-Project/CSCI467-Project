@@ -1,7 +1,6 @@
 import express from 'express';
 import {logger} from './services/LoggerService.js';
 import { initPrisma, disconnectPrisma} from './storage/databases/Prisma.js';
-import { initRedis, disconnectRedis } from './storage/databases/RedisClient.js';
 
 // Import middleware
 import compression from 'compression';
@@ -67,9 +66,6 @@ logger.info('Starting Auto Parts Backend\n');
 logger.info('Connecting to PostgreSQL database');
 await initPrisma();
 
-logger.info('Connecting to Redis');
-await initRedis();
-
 const PORT = process.env.PORT || '5000';
 await app.listen(PORT, () => {
   logger.info(`Auto Parts Backend is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
@@ -79,7 +75,6 @@ await app.listen(PORT, () => {
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
   await disconnectPrisma();
-  await disconnectRedis();
   process.exit(0);
 });
 
