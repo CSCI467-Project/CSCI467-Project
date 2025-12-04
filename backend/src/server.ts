@@ -71,6 +71,12 @@ await app.listen(PORT, () => {
   logger.info(`Auto Parts Backend is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
 
+// Unhandled rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled rejection:', reason);
+});
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');

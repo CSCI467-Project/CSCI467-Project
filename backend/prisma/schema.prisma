@@ -115,8 +115,8 @@ model InventoryLog {
   id             String   @id @default(uuid())
   product        Product  @relation(fields: [productId], references: [id])
   productId      String
-  user           User     @relation(fields: [userId], references: [id])
-  userId         String
+  user           User?    @relation(fields: [userId], references: [id])
+  userId         String?
   quantityChange Int
   quantityAfter  Int
   reason         String

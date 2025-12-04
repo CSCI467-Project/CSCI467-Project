@@ -158,13 +158,12 @@ router.post('/', validate(validators.createOrder), async (req, res) => {
   }
 });
 
-// Get orders (Admin only)
+// Get orders (Admin and Warehouse Workers)
 router.get(
   '/',
   authenticate,
-  authorize('ADMIN'),
-  validate(validators.searchOrders, 'query'),
-  async (req, res) => {
+  authorize('ADMIN', 'WAREHOUSE_WORKER'),
+  async (req: AuthRequest, res) => {
     try {
       const {
         startDate,
@@ -175,25 +174,46 @@ router.get(
         orderId,
         customerEmail,
         customerName
-      } = req.query;
+      } = req.query as {
+        startDate?: string;
+        endDate?: string;
+        status?: string;
+        minPrice?: string;
+        maxPrice?: string;
+        orderId?: string;
+        customerEmail?: string;
+        customerName?: string;
+      };
 
       const where: any = {};
 
       if (startDate || endDate) {
         where.orderedAt = {};
-        if (startDate) where.orderedAt.gte = new Date(startDate as string);
-        if (endDate) where.orderedAt.lte = new Date(endDate as string);
+        if (startDate) where.orderedAt.gte = new Date(startDate);
+        if (endDate) where.orderedAt.lte = new Date(endDate);
       }
 
       if (status) where.status = status;
+
       if (minPrice || maxPrice) {
         where.totalAmount = {};
-        if (minPrice) where.totalAmount.gte = parseFloat(minPrice as string);
-        if (maxPrice) where.totalAmount.lte = parseFloat(maxPrice as string);
+        if (minPrice) where.totalAmount.gte = parseFloat(minPrice);
+        if (maxPrice) where.totalAmount.lte = parseFloat(maxPrice);
       }
-      if (orderId) where.id = orderId;
-      if (customerEmail) where.customerEmail = { contains: customerEmail, mode: 'insensitive' };
-      if (customerName) where.customerName = { contains: customerName, mode: 'insensitive' };
+
+      // Support searching by both UUID (id) and CUID (orderNumber)
+      if (orderId) {
+        // Check if it looks like a UUID or CUID
+        if (orderId.includes('-') && orderId.length === 36) {
+          // Looks like a UUID
+          where.id = orderId;
+        } else {
+          // Assume it's an orderNumber (CUID)
+          where.orderNumber = orderId;
+        }
+      }
+      if (customerEmail) where.customerEmail = { contains: customerEmail };
+      if (customerName) where.customerName = { contains: customerName };
 
       const orders = await prisma.order.findMany({
         where,
@@ -204,11 +224,14 @@ router.get(
             }
           }
         },
-        orderBy: { orderedAt: 'desc' }
+        orderBy: {
+          orderedAt: 'desc'
+        }
       });
 
       res.json({ orders });
     } catch (error) {
+      console.error('Get orders error FULL:', error);
       logger.error('Get orders error:', error);
       res.status(500).json({ error: 'Failed to fetch orders' });
     }
@@ -222,8 +245,15 @@ router.get(
   authorize('WAREHOUSE_WORKER', 'ADMIN'),
   async (req: AuthRequest, res) => {
     try {
+      const idParam = req.params.id;
+
+      // Support both UUID (id) and CUID (orderNumber)
+      const whereClause = idParam.includes('-') && idParam.length === 36
+        ? { id: idParam }  // UUID
+        : { orderNumber: idParam };  // CUID
+
       const order = await prisma.order.findUnique({
-        where: { id: req.params.id },
+        where: whereClause,
         include: {
           items: {
             include: {
@@ -269,8 +299,15 @@ router.post(
   authorize('WAREHOUSE_WORKER', 'ADMIN'),
   async (req, res) => {
     try {
+      const idParam = req.params.id;
+
+      // Support both UUID (id) and CUID (orderNumber)
+      const whereClause = idParam.includes('-') && idParam.length === 36
+        ? { id: idParam }  // UUID
+        : { orderNumber: idParam };  // CUID
+
       const order = await prisma.order.update({
-        where: { id: req.params.id },
+        where: whereClause,
         data: {
           status: 'SHIPPED',
           shippedAt: new Date()
@@ -301,8 +338,15 @@ router.post(
   authorize('ADMIN', 'WAREHOUSE_WORKER'),
   async (req: AuthRequest, res) => {
     try {
+      const idParam = req.params.id;
+
+      // Support both UUID (id) and CUID (orderNumber)
+      const whereClause = idParam.includes('-') && idParam.length === 36
+        ? { id: idParam }  // UUID
+        : { orderNumber: idParam };  // CUID
+
       const order = await prisma.order.findUnique({
-        where: { id: req.params.id },
+        where: whereClause,
         include: {
           items: true
         }

@@ -13,8 +13,8 @@ const Header = () => {
         <Link href="/checkout" style={{ margin: '0 1rem' }}>
           Checkout
         </Link>
-        <Link href="/admin-login" style={{ margin: '0 1rem' }}>
-          Admin Login
+        <Link href="/login" style={{ margin: '0 1rem' }}>
+          Staff Login
         </Link>
       </nav>
     </header>

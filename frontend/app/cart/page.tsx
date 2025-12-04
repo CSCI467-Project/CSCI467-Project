@@ -2,18 +2,25 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../components/CartProvider';
-import { PRODUCTS } from '../data/products';
+import { productsService } from '../lib/api/services/products.service';
 
 const CartPage = () => {
   const { cart, addToCart, removeFromCart } = useCart();
   const router = useRouter();
 
-  const items = PRODUCTS.filter(p => cart[p.name]);
+  const { data } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => productsService.getAll(),
+  });
+
+  const products = data?.products || [];
+  const items = products.filter(p => cart[p.id]);
   const totalItems = Object.values(cart).reduce((s, n) => s + n, 0);
-  const totalPrice = PRODUCTS.reduce((sum, p) => sum + (cart[p.name] || 0) * p.price, 0);
+  const totalPrice = products.reduce((sum, p) => sum + (cart[p.id] || 0) * p.price, 0);
 
   return (
     <>
@@ -27,7 +34,7 @@ const CartPage = () => {
           <div style={{ marginTop: '1rem' }}>
             <ul style={{ listStyle: 'none', padding: 0 }}>
               {items.map((p) => (
-                <li key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                <li key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                   <img src={p.pictureURL} alt={p.name} style={{ width: 100, height: 70, objectFit: 'contain' }} />
                   <div style={{ flex: 1 }}>
                     <strong>{p.name}</strong>
@@ -36,12 +43,12 @@ const CartPage = () => {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button onClick={() => removeFromCart(p.name)} style={{ padding: '0.4rem 0.6rem' }}>-</button>
-                    <div style={{ minWidth: '2rem', textAlign: 'center' }}>{cart[p.name] || 0}</div>
-                    <button onClick={() => addToCart(p.name)} style={{ padding: '0.4rem 0.6rem' }}>+</button>
+                    <button onClick={() => removeFromCart(p.id)} style={{ padding: '0.4rem 0.6rem' }}>-</button>
+                    <div style={{ minWidth: '2rem', textAlign: 'center' }}>{cart[p.id] || 0}</div>
+                    <button onClick={() => addToCart(p.id)} style={{ padding: '0.4rem 0.6rem' }}>+</button>
                   </div>
 
-                  <div style={{ width: 120, textAlign: 'right' }}>${((cart[p.name] || 0) * p.price).toFixed(2)}</div>
+                  <div style={{ width: 120, textAlign: 'right' }}>${((cart[p.id] || 0) * p.price).toFixed(2)}</div>
                 </li>
               ))}
             </ul>

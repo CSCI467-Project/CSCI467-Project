@@ -47,7 +47,7 @@ export async function deductInventory(
       prisma.inventoryLog.create({
         data: {
           productId: item.productId,
-          userId: userId || 'SYSTEM',
+          userId: userId || null,
           quantityChange: -item.quantity,
           quantityAfter: newQuantity,
           reason: 'ORDER_PLACED',
@@ -87,7 +87,7 @@ export async function restoreInventory(
       prisma.inventoryLog.create({
         data: {
           productId: item.productId,
-          userId: userId || 'SYSTEM',
+          userId: userId || null,
           quantityChange: item.quantity,
           quantityAfter: newQuantity,
           reason: 'ORDER_CANCELLED',
